@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # 强化学习笔记摘要（Deep Reinforcement Learning）
 
 ## 摘要说明
