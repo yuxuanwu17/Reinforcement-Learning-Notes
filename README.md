@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 强化学习笔记摘要（Deep Reinforcement Learning）
 
 ## 摘要说明
@@ -51,4 +52,7 @@
 ### 周杰
 
 > https://github.com/shuhuai007/Machine-Learning-Session  讲解透彻|视频
+
+# Reinforcement-Learning-Notes
+强化学习，从MDP 入门开始
 
