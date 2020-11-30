@@ -91,10 +91,6 @@ $$
 
 ![](https://gitee.com/YJLAugus/pic-go/raw/master/img/sum01.png)
 
-**Reference**
-
-https://www.bilibili.com/video/BV1RA411q7wt?p=1
-
 ## MDP动态特性
 
 ### Markov Chain
@@ -167,10 +163,6 @@ $$
 ### Summary
 
 ![image-20201127135356269](https://gitee.com/YJLAugus/pic-go/raw/master/img/image-20201127135356269.png)
-
-**Reference**
-
-https://www.bilibili.com/video/BV1RA411q7wt?t=775&p=2
 
 ## MDP价值函数
 
@@ -257,15 +249,11 @@ $$
 
 ![image-20201128110205095](https://gitee.com/YJLAugus/pic-go/raw/master/img/image-20201128110205095.png)
 
-**Reference**
-
-https://www.bilibili.com/video/BV1RA411q7wt?t=1200&p=3
-
 ## MDP贝尔曼期望方程
 
 ### 价值函数分类
 
-上面提到的的价值函数其实是其中的一种，确切的可以称为 `状态价值函数`，**用$v_\pi(s)$ 来表示**只和状态有关系。初次之外还有另外一种价值函数，那就是`状态行为价值函数`，用$q_\pi(s,a)$这里引入的`action`。故价值函数可以分为下面的两种:
+上面提到的的价值函数其实是其中的一种，确切的可以称为 `状态价值函数`，**用$v_\pi(s)$ 来表示**只和状态有关系。初次之外还有另外一种价值函数，那就是`状态动作价值函数`，用$q_\pi(s,a)$这里引入的`action`。故价值函数可以分为下面的两种:
 $$
 Value \quad Function = \begin{cases} v_\pi(s) = E_\pi[G_t\mid S_t = s], & \text {only $s$ is independent variable} \\ q_\pi(s,a) = E_\pi[G_t\mid S_t = s,A_t = a], & \text{Both $s$ and a are independent variable} \end{cases}
 $$
@@ -279,7 +267,7 @@ $$
 
 
 
-还是以上图为例，对于 s 状态，在随机策略中有三种 action 选择，分别是 $\pi(a_1 \mid s)$，$\pi(a_1 \mid s)$，$\pi(a_1 \mid s)$，三种action(行为)对应的价值函数（此时为行为价值函数）为 $q_\pi(s,a_1)$， $q_\pi(s,a_2)$， $q_\pi(s,a_3)$。那么此时的 $v_\pi(s)$ 就等于各个action的行为状态价值函数的加和，即：
+还是以上图为例，对于 s 状态，在随机策略中有三种 action 选择，分别是 $\pi(a_1 \mid s)$，$\pi(a_1 \mid s)$，$\pi(a_1 \mid s)$，三种action(行为)对应的价值函数（此时为动作价值函数）为 $q_\pi(s,a_1)$， $q_\pi(s,a_2)$， $q_\pi(s,a_3)$。那么此时的 $v_\pi(s)$ 就等于各个action的动作状态价值函数的加和，即：
 $$
 v_\pi(s) = \pi(a_1 \mid s)·q_\pi(s,a_1) +  \pi(a_2 \mid s)·q_\pi(s,a_2) +  \pi(a_3 \mid s)·q_\pi(s,a_3)
 $$
@@ -353,6 +341,155 @@ $$
 
 * 一个实例：
 
+  例子是一个学生学习考试的MDP。里面实心圆位置是**起点**，方框那个位置是**终点**。上面的动作有study, Pub, Facebook, Quit, Sleep，每个状态动作对应的即时奖励R已经标出来了。我们的目标是找到最优的状态动作价值函数或者状态价值函数，进而找出最优的策略。
+
+  <img src="https://gitee.com/YJLAugus/pic-go/raw/master/img/image-20201129160656460.png" alt="image-20201129160656460" style="zoom:50%;" />
+
+  为了方便，我们假设衰减因子 $\gamma =1, \pi(a|s) = 0.5$ 。对于终点方框位置，由于其没有下一个状态，也没有当前状态的动作，因此其状态价值函数为0，对于其他的状态（圆圈）按照从上到下，从左到右的顺序定义其状态价值函数分别是 $v_1,v_2,v_3,v_4$ ，根据（5）式 :
+  $$
+  v_\pi(s) = \sum_{a\in A} \pi(a\mid s) \sum_{s',r}P(s',r \mid s,a)[r+ \gamma v_\pi(s')] \quad\quad\quad\quad\quad\quad (5)
+  $$
+  对于$v_1$位置，我们有：$v_1 = 0.5*(-1+v_1) +0.5*(0+v_2)$
+  
+  对于$v_2$位置，我们有：$v_2 = 0.5*(-1+v_1) +0.5*(-2+v_3)$
+  
+  对于$v_3$位置，我们有：$v_3 = 0.5*(0+0) +0.5*(-2+v_4)$
+  
+  对于$v_4$位置，我们有：$v_4 = 0.5*(10+0) +0.5*(1+0.2*v_2+0.4*v_3+0.4*v_4)$
+  
+  解出这个方程组可以得到 $v_1=-2.3, v_2=-1.3, v_3=2.7, v_4=7.4$, 即每个状态的价值函数如下图：
+
+<img src="https://gitee.com/YJLAugus/pic-go/raw/master/img/image-20201129162749453.png" alt="image-20201129162749453" style="zoom:50%;" />
+
+> 从上面可以看出，针对一个特定状体，状态价值函数计算都是基于下一个状态而言的，通俗的讲，按照“出箭头”的方向计算当前状态的价值函数。
+
+
 ### Summary
 
 ![image-20201128152843746](https://gitee.com/YJLAugus/pic-go/raw/master/img/image-20201128152843746.png)
+
+## MDP贝尔曼最优方程
+
+### 最优价值函数
+
+能够使得 $v$ 达到最大值的那个 $\pi$ ，这个  $\pi$ 被成为最优策略，进而得到**最优状态价值函数**。同理得到最**优状态动作价值函数**。
+$$
+\large
+\begin{cases} v_*(s)\ \dot{=}\ \ \underset{\pi}{max} \ v_\pi(s) & \text{} \\
+q_*(s,a)\ \dot{=}\ \ \underset{\pi}{max} \ q_\pi(s,a) & \text{} & \text {} \end{cases}
+$$
+记 $\pi_* = \underset{\pi}{argmax} \ v_\pi(s) = \underset{\pi}{argmax} \ q_\pi(s,a)$，含义是 $\pi_*$ 可以使得 $ v_*(s)$达到最大值，同样的，也可以使得 
+
+$q_\pi(s,a)$ 达到最大值。
+
+由以上公式得：
+$$
+\large
+\begin{cases}v_*(s)=\underset{\pi}{max}\ v_\pi(s)= v_{\pi_*}(s) & \text{(7)} \\ 
+q_*(s,a)=\underset{\pi}{max}\ q_\pi(s,a)= q_{\pi_*}(s,a) & \text{} & \text {(8)} \end{cases}
+$$
+
+> 值得注意的一点是$ v_*(s)$ 强调的是，不管你采用的是什么策略，只要状态价值函数达到最大值，而 $v_{\pi_*}(s)$ 则更为强调的是 $\pi$ ，达到最大的状态价值函数所采取的最优的那个 $\pi$
+
+此时，我们再探讨一下$v_{\pi_*}(s)$ 和 $q_{\pi_*}(s,a)$ 的关系。在贝尔曼期望方程中，我们提到过 $v_\pi(s) \leq \underset{a}{max}\ q_\pi(s,a)$ ，那么在这里是不是也由类似的关系$v_{\pi_*}(s)\leq \underset{a}{max}\ q_\pi(s,a)$  成立？我们知道 $v_{\pi_*}(s)$ 是一种策略，并且是最优的策略，$q_{\pi_*}(s,a)$ 是代表一个“分支”，因为 $v_{\pi_*}(s)$ 是一个加权平均值，但同样的，和$v_\pi(s)$ 不同的是，$v_{\pi_*}(s)$ 是最优策略的加权平均，那么是不是可以把小于号去掉，写成下面的形式：
+$$
+\large
+v_{\pi_*}(s)= \underset{a}{max}\ q_\pi(s,a)
+$$
+
+
+假定 $v_{\pi_*}(s)\leq \underset{a}{max}\ q_\pi(s,a)$ 中的 $\pi_*$ 还是一个普通的策略，那么一定满足  $v_{\pi_*}(s)\leq \underset{a}{max}\ q_\pi(s,a)$ ，这一点我们已经提到过，如果说 $v_{\pi_*}(s)< \underset{a}{max}\ q_\pi(s,a)$ ，说明$v_{\pi_*}(s)$ 还有提高的空间，并不是最优策略，这和条件矛盾了。所以这个小于不成立，得证：$v_{\pi_*}(s)= \underset{a}{max}\ q_\pi(s,a)$ 
+
+详细证明过程如下：
+
+![image-20201129190023306](https://gitee.com/YJLAugus/pic-go/raw/master/img/image-20201129190023306.png)
+
+其实，上面的式子是由  (3)式 
+$$
+v_\pi(s) = \sum_{a\in A} \pi(a\mid s) ·q_\pi(s,a)  \quad\quad (3)
+$$
+演变而来的。$v_{\pi_*}(s)$ 直接取最大值时候和 $\underset{a}{max}\ q_\pi(s,a)$ 的最大值是相等的。也就是此时不用加权平均了，直接是 $v_\pi(a) = q_\pi(s,a)$ 。那么从原先的(4)式能不能也得出相似
+$$
+q_\pi(s,a) =\sum_{s',r}P(s',r \mid s,a)[r+ \gamma v_\pi(s')] \quad\quad (4)
+$$
+的结论，把求和符号去掉，直接等于最大值呢？答案是否定的，因为$v_{\pi_*}(s)= \underset{a}{max}\ q_\pi(s,a)$  是作用在`action`上的，在公式中也可以看出，换句话说，我们对于下图的a1，a2，a3这里是可以控制的。但是对于下图中的蓝色虚线部分，系统状态转移是无法控制的。
+
+![image-20201128135658979](https://gitee.com/YJLAugus/pic-go/raw/master/img/hss02.svg)
+
+所以，原先的两组公式（3）、（4）并 结合（7）、（8）
+$$
+\large{
+v_\pi(s) = \sum_{a\in A} \pi(a\mid s) ·q_\pi(s,a)  \quad\quad\quad\quad\quad\quad\quad\quad\ (3) \\
+
+q_\pi(s,a) =\sum_{s',r}P(s',r \mid s,a)[r+ \gamma v_\pi(s')] \quad\quad\quad (4)
+}
+$$
+并进行一个推导，得出另外的两组公式（9）、（10）如下：
+$$
+\large{
+v_*(s)=\underset{a}{max}\ q_*(s,a) \quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad (9) \\
+q_*(s,a)= \sum_{s',r}P(s',r \mid s,a)[r+\gamma v_*(s')] \quad\quad\quad (10)
+}
+$$
+
+### 贝尔曼最优方程
+
+（10）式带入（9）式得：
+$$
+\large{
+v_*(s)=\underset{a}{max}\sum_{s',r}P(s',r \mid s,a)[r+\gamma v_\pi(s')] \quad\quad(11) \\
+
+
+}
+$$
+（9）式带入（10）式得：
+$$
+\large
+q_*(s,a)= \sum_{s',r}P(s',r \mid s,a)[r+\gamma \underset{a'}{max}\ q_*(s',a') ] \quad\quad (12)
+$$
+（11）、（12）被称为**贝尔曼最优方程**。
+
+* 一个实例：还是以上面的例子讲解，我们这次以动作价值函数 $q_*(s,a)$ 为例来求解 $v_*(s),q_*(s,a) $
+
+  <img src="https://gitee.com/YJLAugus/pic-go/raw/master/img/image-20201129160656460.png" alt="image-20201129160656460" style="zoom:50%;" />
+
+根据（12）式
+
+$$
+\large
+q_*(s,a)= \sum_{s',r}P(s',r \mid s,a)[r+\gamma \underset{a'}{max}\ q_*(s',a') ] \quad\quad (12)
+$$
+可得方程组如下：
+
+$$
+\large{\begin{align}
+q_*(s_4, study) & = 10 \\
+q_*(s_4, pub) & = 1 + 0.2 * \underset{a'}{max}q_*(s_2, a') + 0.4 * max_{a'}q_*(s_3, a') + 0.4 * \underset{a'}{max}q_*(s_4, a') \\
+q_*(s_3, sleep) & = 0  \\
+q_*(s_3, study) & = -2 + \underset{a'}{max}q_*(s_4, a') \\
+q_*(s_2, study) & = -2 + \underset{a'}{max}q_*(s_3, a') \\
+q_*(s_2, facebook) & = -1 + \underset{a'}{max}q_*(s_1, a') \\
+q_*(s_1, facebook) & = -1 + \underset{a'}{max}q_*(s_1, a') \\
+q_*(s_1, quit) & = 0 + \underset{a'}{max}q_*(s_2, a')
+\end{align}}
+$$
+
+然后求出所有的 $q_*(s,a)$，然后再利用 $v_*(s) = \underset{a'}{max}q_*(s,a)$，就可以求出所有的  $v_*(s)$，最终结果如下图所示：
+
+<img src="https://gitee.com/YJLAugus/pic-go/raw/master/img/image-20201130141108720.png" alt="image-20201130141108720" style="zoom: 67%;" />
+
+详细的计算过程可以看下视频 的简单分析。https://www.bilibili.com/video/BV1Fi4y157vR/
+
+### Summary
+
+![image-20201129210325397](https://gitee.com/YJLAugus/pic-go/raw/master/img/image-20201129210325397.png)
+
+## 参考文献
+
+https://www.bilibili.com/video/BV1RA411q7wt
+
+https://www.cnblogs.com/pinard/p/9426283.html
+
+https://www.davidsilver.uk/wp-content/uploads/2020/03/MDP.pdf
+
+https://www.cnblogs.com/jsfantasy/p/jsfantasy.html
