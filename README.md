@@ -1,6 +1,6 @@
 
-# 强化学习笔记摘要（Deep Reinforcement Learning）
-
+# 强化学习笔记参考（Deep Reinforcement Learning）
+## 在线阅读：https://www.yuque.com/yjlaugus/reinforcement-learning-notes
 ## 摘要说明
 
 因为前辈们已经整理出了一套相当不错的教程，已经各个资源的整合，这里就不在进行逐一整理，一个是为了提高时间效率，另一个是用于记录自己学习中的有趣点和自己的见解。
