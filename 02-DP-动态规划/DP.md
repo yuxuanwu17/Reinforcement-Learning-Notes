@@ -111,7 +111,7 @@ $$
 \large{
 \begin{align}
 
-\gamma \sum_{a\in A} \pi(a\mid s) \sum_{s',r}p(s',r \mid s,a) \cdot v_\pi(s') \\
+\gamma \sum_{a\in A} \pi(a\mid s) \sum_{s',r}p(s',r \mid s,a) \cdot v_\pi(s') 
 =& \gamma \sum_{a\in A} \pi(a\mid s) \sum_{s'}\underbrace{p(s' \mid s,a)}_{状态转移函数} \cdot v_\pi(s') \quad\quad (4)
 
 
@@ -123,7 +123,7 @@ $$
 \large{
 \begin{align}
 
-\gamma \sum_{a\in A} \pi(a\mid s) \sum_{s',r}p(s',r \mid s,a) \cdot v_\pi(s') \\
+\gamma \sum_{a\in A} \pi(a\mid s) \sum_{s',r}p(s',r \mid s,a) \cdot v_\pi(s') 
 =& \gamma \sum_{a\in A} \pi(a\mid s) \sum_{s'}\underbrace{p(s' \mid s,a)}_{状态转移函数} \cdot v_\pi(s') \quad\quad (4) \\
 
 
@@ -148,10 +148,130 @@ $$
 于是，结合（3）和（6）式得：
 $$
 \large{
-v_\pi(s) = r_\pi(s) + \gamma \sum_{s'} P_\pi(s,s') \cdot v_\pi(s')
+v_\pi(s) = r_\pi(s) + \gamma \sum_{s'} P_\pi(s,s') \cdot v_\pi(s') \quad\quad\quad (7)
 }
 $$
-令$s_i$
+令$s_i\dot{=s},s_j \dot{=} s'$ ，则（7） 式得：
+$$
+\large{
+v_\pi(s) = r_\pi(s) + \gamma \underbrace{\sum_{j=1}^{\lvert S \rvert} P_\pi(s_i,s_j) }_{①}\cdot v_\pi(s') \quad\quad\quad (7)
+}
+$$
+由（7）式中的①式可得，正好是矩阵$P_\pi(s,s')$ ，其中的 $P_\pi(s_i,s_j)$正是矩阵的一行。（7）式中$v_\pi(s)，r_\pi(s)，①，v_\pi(s')$ 式（$v_\pi(s')$本质是和$v_\pi(s)$是一样的），都分别对应一个矩阵，也即：
+$$
+\begin{pmatrix}
+v_\pi(s_1)\\
+v_\pi(s_2)\\
+\vdots    \\
+v_\pi(s_{\lvert S \rvert})
+\end{pmatrix} _{\lvert S \rvert \times 1}
+=
+
+\begin{pmatrix}
+r_\pi(s_1)\\
+r_\pi(s_2)\\
+\vdots    \\
+r_\pi(s_{\lvert S \rvert})
+\end{pmatrix} _{\lvert S \rvert \times 1}
++ \gamma
+
+\begin{pmatrix}
+P_\pi(s_1,s'_1) & \cdots & P_\pi(s_1,s'_{\lvert S \rvert})\\
+\vdots & \ddots & \vdots \\
+P_\pi(s_{\lvert S \rvert},s'_1) & \cdots & P_\pi(s_{\lvert S \rvert},s'_{\lvert S \rvert})\\
+\end{pmatrix} _{\lvert S \rvert \times \lvert S \rvert}
+\cdot 
+
+\begin{pmatrix}
+v_\pi(s_1)\\
+v_\pi(s_2)\\
+\vdots    \\
+v_\pi(s_{\lvert S \rvert})
+\end{pmatrix} _{\lvert S \rvert \times 1}
+$$
+最终化简到矩阵的运算。故，由（7）式进一步得：
+$$
+\large{
+\begin{align}
+v_\pi(s) =& r_\pi(s) + \gamma P_\pi(s,s') \cdot v_\pi(s') \quad\quad\quad \\
+v_\pi=& r_\pi + \gamma P_\pi \cdot v_\pi \quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\qquad (8)\\
+(I-P_\pi)v_\pi =& r_\pi \quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\qquad\quad\quad\quad\quad\quad\ (9) \\
+v_\pi =& (I-P_\pi)^{-1} r_\pi \qquad\qquad\qquad\qquad\qquad\qquad(10)
+\end{align}
+}
+$$
+经过以上推导，得出（10）式。其中在（8）式中$v_\pi(s')$ 其实是 $v_\pi(s)$ 的迭代，所以直接用 $v_\pi(s)$ 替换，在（9）式中$\gamma$ 是个常数，也可忽略。从向量中可以得出复杂度$O({\lvert S \rvert}^3)$
+
+### Summary
+
+![image-20201203135011156](https://gitee.com/YJLAugus/pic-go/raw/master/img/image-20201203135011156.png)
+
+### 策略评估-应用
+
+首先，我们来看如何使用动态规划来求解强化学习的**预测问题**，即求解给定策略的状态价值函数的问题。这个问题的求解过程我们通常叫做策略评估(Policy Evaluation)。
+
+策略评估的基本思路是从**任意一个状态价值函数开始**，依据给定的策略，结合贝尔曼期望方程、状态转移概率和奖励同步迭代更新状态价值函数，直至其**收敛**，得到该策略下最终的状态价值函数。
+
+假设我们在第$k$轮迭代已经计算出了所有的状态的状态价值，那么在第$k+1$轮我们可以利用第$k$轮计算出的**状态价值**计算出第$k+1$轮的状态价值。这是通过贝尔曼方程来完成的，即：
+$$
+\large{
+v_{k+1}(s) = \sum\limits_{a \in A} \pi(a|s)(R_s^a + \gamma \sum\limits_{s' \in S}P_{ss'}^av_{k}(s'))
+ \\
+
+= \sum_{a\in A} \pi(a\mid s) \sum_{s',r}p(s',r \mid s,a)[r+ \gamma v_\pi(s')]
+}
+$$
+和上一节的式子唯一的区别是由于我们的策略$\pi$已经给定，我们不再写出，对应加上了迭代轮数的下标。我们每一轮可以对计算得到的新的状态价值函数再次进行迭代，直至状态价值的值改变**很小(收敛)**，那么我们就得出了预测问题的解，即给定策略的状态价值函数$v_\pi$。
+
+下面我们用一个具体的例子来说明策略评估的过程。
+
+![image-20201203142402216](https://gitee.com/YJLAugus/pic-go/raw/master/img/image-20201203142402216.png)
+
+
+
+这是一个经典的Grid World的例子。我们有一个`4x4`的16宫格。只有左上和右下的格子是终止格子。该位置的价值固定为0，个体如果到达了该2个格子，则停止移动，此后每轮奖励都是0。个体在16宫格其他格的每次移动，得到的即时奖励R都是-1。注意个体每次只能移动一个格子，且只能上下左右4种移动选择，不能斜着走, 如果在边界格往外走，则会直接移动回到之前的边界格。衰减因子我们定义为$\gamma =1$。由于这里每次移动，下一格都是固定的，因此所有可行的的状态转化概率$P =1$。这里给定的策略是随机策略，即每个格子里有25%的概率向周围的4个格子移动。
+
+![image-20201203142716568](https://gitee.com/YJLAugus/pic-go/raw/master/img/image-20201203142716568.png)
+
+首先我们初始化所有格子的状态价值为0，如上图$k=0$的时候。现在我们开始策略迭代了。由于终止格子的价值固定为0，我们可以不将其加入迭代过程。
+
+**在$k=1$时**，我们利用上面的贝尔曼方程先计算第二行第一个格子的价值：
+$$
+v_1^{(21)} = \frac{1}{4}[(-1+0) +(-1+0)+(-1+0)+(-1+0)] = -1
+$$
+第二行第二个格子的价值是：
+$$
+v_1^{(22)} = \frac{1}{4}[(-1+0) +(-1+0)+(-1+0)+(-1+0)] = -1
+$$
+其他的格子都是类似的，第一轮的状态价值迭代的结果如上图$k=1$的时候。现在我们第一轮迭代完了。
+
+**在$k=1$时**，还是看第二行第一个格子的价值：
+$$
+v_2^{(21)} = \frac{1}{4}[(-1+0) +(-1-1)+(-1-1)+(-1-1)] = -1.75
+$$
+第二行第二个格子的价值是：
+$$
+v_2^{(22)} = \frac{1}{4}[(-1-1) +(-1-1)+(-1-1)+(-1-1)] = -2
+$$
+最终得到的结果是上图$k=2$的时候，第二轮迭代完毕。
+
+![image-20201203142745214](https://gitee.com/YJLAugus/pic-go/raw/master/img/image-20201203142745214.png)
+
+**在$k=3$时**：
+$$
+v_3^{(21)} = \frac{1}{4}[(-1+0)+(-1-1.7) +(-1-2)+(-1-2)] = -2.425 \\
+v_3^{(22)} = \frac{1}{4}[(-1-1.7) +(-1-1.7)+(-1-2)+(-1-2)] = -2.85
+$$
+
+> 计算家和的过程 就是 上、下、左、右四个方向，其中无论哪次迭代，都有 $v_k^{11} = 0$。
+
+最终得到的结果是上图$k=3$的时候。就这样一直迭代下去，直到每个格子的策略价值改变很小（收敛）为止。这时我们就得到了所有格子的基于随机策略的状态价值。
+
+可以看到，动态规划的策略评估计算过程并不复杂，但是如果我们的问题是一个非常复杂的模型的话，这个计算量还是非常大的。
+
+
+
+
 
 ## 价值迭代
 
@@ -160,3 +280,7 @@ $$
 ## 参考文献
 
 https://www.cnblogs.com/pinard/p/9463815.html
+
+https://www.bilibili.com/video/BV1nV411k7ve?t=1738
+
+https://www.davidsilver.uk/wp-content/uploads/2020/03/DP.pdf
