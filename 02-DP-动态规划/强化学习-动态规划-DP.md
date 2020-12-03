@@ -206,7 +206,7 @@ $$
 
 ![image-20201203135011156](https://gitee.com/YJLAugus/pic-go/raw/master/img/image-20201203135011156.png)
 
-### 策略评估-应用
+### 策略评估-迭代解
 
 首先，我们来看如何使用动态规划来求解强化学习的**预测问题**，即求解给定策略的状态价值函数的问题。这个问题的求解过程我们通常叫做策略评估(Policy Evaluation)。
 
@@ -218,10 +218,16 @@ $$
 v_{k+1}(s) = \sum\limits_{a \in A} \pi(a|s)(R_s^a + \gamma \sum\limits_{s' \in S}P_{ss'}^av_{k}(s'))
  \\
 
-= \sum_{a\in A} \pi(a\mid s) \sum_{s',r}p(s',r \mid s,a)[r+ \gamma v_\pi(s')]
+ v_{k+1}(s) \dot{=}\sum_{a\in A} \pi(a\mid s) \sum_{s',r}p(s',r \mid s,a)[r+ \gamma v_k(s')]
 }
 $$
 和上一节的式子唯一的区别是由于我们的策略$\pi$已经给定，我们不再写出，对应加上了迭代轮数的下标。我们每一轮可以对计算得到的新的状态价值函数再次进行迭代，直至状态价值的值改变**很小(收敛)**，那么我们就得出了预测问题的解，即给定策略的状态价值函数$v_\pi$。
+
+### Summary
+
+![image-20201203183436771](https://gitee.com/YJLAugus/pic-go/raw/master/img/image-20201203183436771.png)
+
+### 策略评估-（迭代解）应用
 
 下面我们用一个具体的例子来说明策略评估的过程。
 
@@ -269,9 +275,150 @@ $$
 
 可以看到，动态规划的策略评估计算过程并不复杂，但是如果我们的问题是一个非常复杂的模型的话，这个计算量还是非常大的。
 
+### 策略改进-策略改进定理
+
+现在出现了这样一个问题，如果给定一个 $\pi$ 和 $\pi'$ ，我们如何判断哪一策略更好呢？采用我们以前提到的方法，就是分别计算各自对应的价值函数，然后通过判断两个价值函数的大小来判断策略的好坏。虽然能够得出结论，但是这个计算的过程也是会占用 “资源”的，能否有另外一种方式可以实现相应的功能呢？有，那就是**策略改进定理。**
+
+**策略改进定理：** **给定$\pi，\pi'$，如果$\forall(s) \in S,q_\pi(s,\pi'(s)) \geq v_\pi(s)$，那么，则有 $\forall s\in S,v_\pi'(s) \geq v_\pi(s)$。**
+
+通过上面的定理可得，$q_\pi(s,a)$ 只要算出来了，那么 $v_\pi(s)$ 自然也会得出（$v_\pi(s)$ 是$q_\pi(s,a)$的加权平均），此时我们不再需要再求得 $v_{\pi'}(s)$，而是直接把$\pi'(s)$ 带入到 $q_\pi(s,a)$ 中的a中即可。
+
+下面进行定理的一个证明：
+
+在 $q_\pi(s,\pi'(s)) \geq v_\pi(s)$ 中，里面的 $q_\pi(s,a)$ 和 $v_\pi(s')$ 有如下关系，我们在第一张MDP已经证明过：
+$$
+\large{
+\begin{align}
+q_\pi(s,a) =& \sum_{s',r}P(s',r \mid s,a)[r+ \gamma v_\pi(s')] \\
+=&E_\pi[R_{t+1} + \gamma v_\pi(s_{t+1}) \mid S_t = s, A_t=a]
+\end{align}
+}
+$$
+其实，这里需要说明一点，上式中 $E_\pi$ 中的$\pi$ 严格意义上是不能带着的，对于$R_{t+1}$ ， 不是$\pi$ 控制的，详情看下图的蓝色虚线（在第一章中，我们称其未系统之间的状态转移），
+
+![image-20201128135658979](https://gitee.com/YJLAugus/pic-go/raw/master/img/hss02.svg)
+
+当然了，对于 $R_{t+2}, R_{t+3}$ 等是需要 $\pi$ 控制的，在公式中的体现就是$v_\pi$。故，这里准确写法应该如下：
+$$
+\large{
+\begin{align}
+q_\pi(s,a) =& \sum_{s',r}P(s',r \mid s,a)[r+ \gamma v_\pi(s')] \\
+=& E[R_{t+1} + \gamma v_\pi(S_{t+1}) \mid S_t = s, A_t=a]
+\end{align}
+}
+$$
+**证明：**$\forall(s) \in S,q_\pi(s,\pi'(s)) \geq v_\pi(s)$，把 $a=\pi'(s)$ 带入得：
+$$
+\large{
+\begin{align}
+v_\pi(s) \leq & q_\pi(s,\pi'(s)) \\
+=& E[R_{t+1} + \gamma v_\pi(S_{t+1}) \mid S_t = s, A_t=\pi'(s)] \quad\quad\quad(1) \\
+=& E_{\pi'}[R_{t+1} + \gamma v_\pi(S_{t+1}) \mid S_t = s] \quad\quad\quad\quad\quad\quad\quad\quad (2)
 
 
+\end{align}
+}
+$$
+上面式子中，在（2）式中，我们把 $\pi'$那个策略定义到 $R_{t+1}$ 上，其余的还是采取 $\pi$ 的策略。在（2）式中出现了 $v_\pi(s_{t+1})$ ，再带入$v_\pi(s) \leq q_\pi(s,\pi'(s))$  得：
+$$
+\large{
+\begin{align}
+v_\pi(s) \leq & q_\pi(s,\pi'(s)) \\
+=& E[R_{t+1} + \gamma v_\pi(S_{t+1}) \mid S_t = s, A_t=\pi'(s)] \quad\quad\quad(1) \\
+=& E_{\pi'}[R_{t+1} + \gamma v_\pi(S_{t+1}) \mid S_t = s] \quad\quad\quad\quad\quad\quad\quad\quad\ (2) \\
 
+\leq & E_{\pi'}[R_{t+1} + \gamma q_\pi(S_{t+1},\pi'(S_{t+1})) \mid S_t = s] \quad\quad\quad\quad\quad\ (3)
+
+
+\end{align}
+}
+$$
+再把$q_\pi(s_{t+1},\pi'(s_{t+1}))$ 带入（2）式得：
+$$
+\large{
+\begin{align}
+v_\pi(s) \leq & q_\pi(s,\pi'(s)) \\
+=& E[R_{t+1} + \gamma v_\pi(S_{t+1}) \mid S_t = s, A_t=\pi'(s)] \quad\quad\quad(1) \\
+=& E_{\pi'}[R_{t+1} + \gamma v_\pi(S_{t+1}) \mid S_t = s] \quad\quad\quad\quad\quad\quad\quad\quad\ (2) \\
+
+\leq & E_{\pi'}[R_{t+1} + \gamma q_\pi(S_{t+1},\pi'(S_{t+1})) \mid S_t = s] \quad\quad\quad\quad\quad\ (3) \\
+
+=&E_{\pi'}[R_{t+1} + \gamma E_{\pi'}[R_{t+2} + \gamma v_\pi(S_{t+2}) \mid S_{t+1}] \mid S_t=s ]\quad\quad\ (4)
+
+
+\end{align}
+}
+$$
+有一点注意，在（4）式中 $S_{t+1}$ 没有写成等于多少的形式，这里只是对于$S_{t+2}$ 的前提条件，表明其不能独立出现。然后再对（4）展开得：
+$$
+\large{
+\begin{align}
+v_\pi(s) \leq & q_\pi(s,\pi'(s)) \\
+=& E[R_{t+1} + \gamma v_\pi(S_{t+1}) \mid S_t = s, A_t=\pi'(s)] \quad\quad\quad(1) \\
+=& E_{\pi'}[R_{t+1} + \gamma v_\pi(S_{t+1}) \mid S_t = s] \quad\quad\quad\quad\quad\quad\quad\quad\ (2) \\
+
+\leq & E_{\pi'}[R_{t+1} + \gamma q_\pi(S_{t+1},\pi'(S_{t+1})) \mid S_t = s] \quad\quad\quad\quad\quad\ (3) \\
+
+=&E_{\pi'}[R_{t+1} + \gamma E_{\pi'}[R_{t+2} + \gamma v_\pi(S_{t+2}) \mid S_{t+1}] \mid S_t=s ]\quad\quad\ (4) \\
+
+=&E_{\pi'}[R_{t+1} + \gamma E_{\pi'}[R_{t+2} \mid S_{t+1}] + \gamma^2 E_{\pi'}[v_\pi(S_{t+2}) \mid S_{t+1}] \mid S_t=s ]\quad\quad\ (5)
+
+
+\end{align}
+}
+$$
+对于（5）式，出现了“期望套期望”，期望的期望还是期望，并且都是 $E{\pi'}$，故（5）式可以进一步化简得：
+$$
+\large{
+\begin{align}
+v_\pi(s) \leq & q_\pi(s,\pi'(s)) \\
+=& E[R_{t+1} + \gamma v_\pi(S_{t+1}) \mid S_t = s, A_t=\pi'(s)] \quad\quad\quad(1) \\
+=& E_{\pi'}[R_{t+1} + \gamma v_\pi(S_{t+1}) \mid S_t = s] \quad\quad\quad\quad\quad\quad\quad\quad\ (2) \\
+
+\leq & E_{\pi'}[R_{t+1} + \gamma q_\pi(S_{t+1},\pi'(S_{t+1})) \mid S_t = s] \quad\quad\quad\quad\quad\ (3) \\
+
+=&E_{\pi'}[R_{t+1} + \gamma E_{\pi'}[R_{t+2} + \gamma v_\pi(S_{t+2}) \mid S_{t+1}] \mid S_t=s ]\quad\quad\ (4) \\
+
+=&E_{\pi'}[R_{t+1} + \gamma E_{\pi'}[R_{t+2} \mid S_{t+1}] + \gamma^2 E_{\pi'}[v_\pi(S_{t+2}) \mid S_{t+1}] \mid S_t=s ]\quad\quad\ (5) \\
+
+=&E_{\pi'}[R_{t+1} + \gamma R_{t+2}  + \gamma^2v_\pi(S_{t+2}) \mid S_t=s ]\quad\quad\ (6)
+
+
+\end{align}
+}
+$$
+到这里，只走了两步，可以看到，由 $\pi'$ 一开始的只控制 $R_{t+1}$ ，走完两步后，$R_{t+2}$ 也属于 $\pi'$ 控制，接下来继续走的话，$\pi'$ 控制的 $R$ 会越来越多，$\pi$ 控制的 $R$ 越来越少。
+$$
+\large{
+\begin{align}
+v_\pi(s) \leq & q_\pi(s,\pi'(s)) \\
+=& E[R_{t+1} + \gamma v_\pi(S_{t+1}) \mid S_t = s, A_t=\pi'(s)] \quad\quad\quad(1) \\
+=& E_{\pi'}[R_{t+1} + \gamma v_\pi(S_{t+1}) \mid S_t = s] \quad\quad\quad\quad\quad\quad\quad\quad\ (2) \\
+
+\leq & E_{\pi'}[R_{t+1} + \gamma q_\pi(S_{t+1},\pi'(S_{t+1})) \mid S_t = s] \quad\quad\quad\quad\quad\ (3) \\
+
+=& E_{\pi'}[R_{t+1} + \gamma E_{\pi'}[R_{t+2} + \gamma v_\pi(S_{t+2}) \mid S_{t+1}] \mid S_t=s ]\quad\quad\ (4) \\
+
+=& E_{\pi'}[R_{t+1} + \gamma E_{\pi'}[R_{t+2} \mid S_{t+1}] + \gamma^2 E_{\pi'}[v_\pi(S_{t+2}) \mid S_{t+1}] \mid S_t=s ]\quad\quad\ (5) \\
+
+=& E_{\pi'}[R_{t+1} + \gamma R_{t+2}  + \gamma^2v_\pi(S_{t+2}) \mid S_t=s ]\quad\quad\ (6)\\
+
+\leq & E_{\pi'}[R_{t+1} + \gamma R_{t+2}  +\gamma^2 R_{t+3} + \gamma^3v_\pi(S_{t+3}) \mid S_t=s ]\quad\quad\quad (7)\\
+
+\vdots \\
+
+\leq & E_{\pi'} \underbrace{[R_{t+1} + \gamma R_{t+2}  +\gamma^2 R_{t+3} + \gamma^4 R_{t+4} + \cdots}_{G_t} \mid S_t=s ] \quad\quad\ (8)\\ 
+
+=& v_{\pi'}(s)
+
+\end{align}
+}
+$$
+故得到：$v_\pi'(s) \geq v_\pi(s)$， 得证。
+
+### Summary
+
+![image-20201203210853298](https://gitee.com/YJLAugus/pic-go/raw/master/img/image-20201203210853298.png)
 
 ## 价值迭代
 
