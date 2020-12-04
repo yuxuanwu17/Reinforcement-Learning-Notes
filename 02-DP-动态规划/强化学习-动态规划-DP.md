@@ -420,6 +420,120 @@ $$
 
 ![image-20201203210853298](https://gitee.com/YJLAugus/pic-go/raw/master/img/image-20201203210853298.png)
 
+### 策略改进-贪心策略
+
+这节就是利用策略改进定理提出一种策略改进的方法——**贪心策略**（Greedy Policy）。对于 $\forall s \in S$，定义如下公式：
+$$
+\large{
+\pi'(s) = \underset{a}{argmax}\ q_\pi(s,a) \quad\quad (1)
+}
+$$
+上面式子的意识是说，根据我们上节课所说的，从一个策略$\pi$，经过策略评估得到一些 $\pi'$ ，如下图所示。并从这些 $\pi'$ 中选择一个最大的$q_\pi(s,a)$。$\underset{a}{argmax}$ 表示能够使得表达式的值最大化的 $a$。
+
+![](https://gitee.com/YJLAugus/pic-go/raw/master/img/pe.svg)
+
+
+
+由在第一章讲到的 $v_\pi(s)$ 和 $q_\pi(s,a)$ 的 关系得：$v_\pi(s) \leq \underset{a}max \ q_\pi(s,a)$ 。又因由（1）式可得， $q_\pi(s,\pi'(s)) = \underset{a}max \ q_\pi(s,a)$ 故得：
+$$
+\large{
+v_\pi(s) \leq \underset{a}max \ q_\pi(s,a) =q_\pi(s,\pi'(s)) \\
+v_\pi(s) \leq q_\pi(s,\pi'(s)) \quad\quad\quad \quad \qquad\quad\quad \qquad\quad\quad
+(2)
+}
+$$
+（2）式正好满足上节我们说的策略改进定理。**故由策略定理得知：对于 $\forall s \in S$，$v_{\pi'}(s) \geq v_\pi(s)$。**
+
+如果在某一个时刻，一直迭代，如果出现了 $ v_\pi(s)=v_{\pi'}(s)$ ，这种情况，也就是说明 $v_\pi(s)$ 此时已经不能再好了，并且此时$ v_\pi(s)=v_{\pi'}(s) =v_*$。如下图所示：
+
+![](https://gitee.com/YJLAugus/pic-go/raw/master/img/veq.svg)
+
+
+
+> **证明**：如果$v_{\pi'}=v_\pi$ 那么，$ v_\pi(s)=v_{\pi'}(s) =v_*$
+
+证：由 $v_{\pi'}=v_\pi$， 可以得出 $q_{\pi'}=q_\pi。$$\forall s\in S$，由$v_\pi(s) = \sum_{a\in A} \pi(a\mid s) ·q_\pi(s,a) $可得：
+$$
+\large{
+\begin{align}
+v_{\pi'}(s) =& \sum_{a\in A} {\pi'}(a\mid s) ·q_{\pi'}(s,a)\\
+=& \sum_{a\in A} {\pi'}(a\mid s) ·q_{\pi}(s,a) \quad\quad\quad\ (3) \\  
+
+\end{align}
+}
+$$
+因为前面说的 $\pi'$ 都是选择一个最优的策略，也就是**确定性策略**，如下图所示：
+
+![image-20201128135658979](https://gitee.com/YJLAugus/pic-go/raw/master/img/hss02.svg)
+
+假如我们选择`a3`这个策略为 $\pi'$ 。故在（3）式中的加和可以去掉了，因为是确定性策略，那么选择`a2` 和 `a1`的概率就是0，例缩当然加和后只剩下`a3` 这个策略$\pi'$，故继续推导得：
+$$
+\large{
+\begin{align}
+v_{\pi'}(s) =& \sum_{a\in A} {\pi'}(a\mid s) ·q_{\pi'}(s,a)\\
+=& \sum_{a\in A} {\pi'}(a\mid s) ·q_{\pi}(s,a) \quad\quad\quad\ (3) \\
+=& q_\pi(s,\pi'(s)) \quad\quad\quad\quad\quad\quad\quad\quad\ (4)  \\
+
+\end{align}
+}
+$$
+由（4）式和（2）中$\underset{a}max \ q_\pi(s,a) =q_\pi(s,\pi'(s))$ 得：
+$$
+\large{
+\begin{align}
+v_{\pi'}(s) =& \sum_{a\in A} {\pi'}(a\mid s) ·q_{\pi'}(s,a)\\
+=& \sum_{a\in A} {\pi'}(a\mid s) ·q_{\pi}(s,a) \quad\quad\quad\ (3) \\
+=& q_\pi(s,\pi'(s)) \quad\quad\quad\quad\quad\quad\quad\quad\quad (4)  \\
+=& \underset{a}max \ q_\pi(s,a) \qquad\quad\quad\quad\quad\quad\quad\ (5)\\
+
+\end{align}
+}
+$$
+（5）式再由$q_\pi(s,a) =\sum_{s',r}P(s',r \mid s,a)[r+ \gamma v_\pi(s')] $ 可得：
+$$
+\large{
+\begin{align}
+v_{\pi'}(s) =& \sum_{a\in A} {\pi'}(a\mid s) ·q_{\pi'}(s,a)\\
+=& \sum_{a\in A} {\pi'}(a\mid s) ·q_{\pi}(s,a) \quad\quad\quad\ (3) \\
+=& q_\pi(s,\pi'(s)) \quad\quad\quad\quad\quad\quad\quad\quad\quad (4)  \\
+=& \underset{a}max \ q_\pi(s,a) \qquad\quad\quad\quad\quad\quad\quad\ (5)\\
+=& \underset{a}max \sum_{s',r}P(s',r \mid s,a)[r+ \gamma v_\pi(s')] \quad (6) \\
+\end{align}
+}
+$$
+在（6）式中，又因为题设中，$v_{\pi'}=v_\pi$ 故带入得：
+$$
+\large{
+\begin{align}
+v_{\pi'}(s) =& \sum_{a\in A} {\pi'}(a\mid s) ·q_{\pi'}(s,a)\\
+=& \sum_{a\in A} {\pi'}(a\mid s) ·q_{\pi}(s,a) \quad\quad\quad\ (3) \\
+=& q_\pi(s,\pi'(s)) \quad\quad\quad\quad\quad\quad\quad\quad\quad (4)  \\
+=& \underset{a}max \ q_\pi(s,a) \qquad\quad\quad\quad\quad\quad\quad\ (5)\\
+=& \underset{a}max \sum_{s',r}P(s',r \mid s,a)[r+ \gamma v_\pi(s')] \quad (6) \\
+=& \underset{a}max \sum_{s',r}P(s',r \mid s,a)[r+ \gamma v_{\pi’}(s')] \quad (7)
+\end{align}
+}
+$$
+故此时我们得到：
+$$
+\large
+v_{\pi'}(s) = \underset{a}max \sum_{s',r}P(s',r \mid s,a)[r+ \gamma v_{\pi’}(s')] \quad(8)
+$$
+并且我们由贝尔曼最优方程得：
+$$
+\large{
+v_*(s)=\underset{a}{max}\sum_{s',r}P(s',r \mid s,a)[r+\gamma v_\pi(s')] \quad\quad(9) \\
+
+
+}
+$$
+故由（8）式和（9）式，以及题设$v_{\pi'}=v_\pi$ 得证：
+$$
+ \large
+ v_\pi(s)=v_{\pi'}(s) =v_*
+$$
+
+
 ## 价值迭代
 
 
@@ -431,3 +545,5 @@ https://www.cnblogs.com/pinard/p/9463815.html
 https://www.bilibili.com/video/BV1nV411k7ve?t=1738
 
 https://www.davidsilver.uk/wp-content/uploads/2020/03/DP.pdf
+
+http://www.incompleteideas.net/book/the-book.html
